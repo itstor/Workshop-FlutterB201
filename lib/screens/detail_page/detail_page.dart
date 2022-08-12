@@ -1,8 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/models/TodoModel.dart';
 import 'package:todo_app/screens/edit_page/edit_page.dart';
 
-class DetailPage extends StatelessWidget {
+class DetailPage extends StatefulWidget {
+  static const String routeName = '/detail';
   const DetailPage({Key? key}) : super(key: key);
+
+  @override
+  State<DetailPage> createState() => _DetailPageState();
+}
+
+class _DetailPageState extends State<DetailPage> {
+  late ToDo todo;
+  late Function onChange;
+  late Function onDelete;
+
+  @override
+  void didChangeDependencies() {
+    final Map<String, dynamic> arguments =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    todo = arguments['todo'] as ToDo;
+    onDelete = arguments['onDelete'] as Function;
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,17 +33,24 @@ class DetailPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              Navigator.push(
+              Navigator.pushNamed(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const EditPage(),
-                ),
-              );
+                EditPage.routeName,
+                arguments: {
+                  'todo': todo,
+                  'onEdit': () {},
+                },
+              ).then((_) {
+                setState(() {});
+              });
             },
           ),
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () {},
+            onPressed: () {
+              onDelete(todo);
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
@@ -32,25 +59,29 @@ class DetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "ToDo Title",
-              style: TextStyle(
+            Text(
+              todo.title,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 18),
-            const Text(
-              "This is some todo details that you supposesdd to write right now",
-              style: TextStyle(
+            Text(
+              todo.description,
+              style: const TextStyle(
                 fontSize: 18,
               ),
             ),
             const SizedBox(height: 24),
             Center(
               child: ElevatedButton(
-                onPressed: () {},
-                child: const Text("Mark as Done"),
+                onPressed: () {
+                  setState(() {
+                    todo.done = !todo.done;
+                  });
+                },
+                child: Text(todo.done ? 'Undone' : 'Mark as Done'),
               ),
             ),
           ],

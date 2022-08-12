@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/models/TodoModel.dart';
 import 'package:todo_app/screens/detail_page/detail_page.dart';
 import 'package:todo_app/screens/edit_page/edit_page.dart';
 
 class ToDoItemWidget extends StatefulWidget {
-  final String title;
-  final String description;
-  final bool isDone;
+  final ToDo todo;
+  final Function onDelete;
+  final Function refresh;
 
   const ToDoItemWidget({
     Key? key,
-    this.isDone = false,
-    required this.title,
-    required this.description,
+    required this.todo,
+    required this.onDelete,
+    required this.refresh,
   }) : super(key: key);
 
   @override
@@ -19,38 +20,29 @@ class ToDoItemWidget extends StatefulWidget {
 }
 
 class _ToDoItemWidgetState extends State<ToDoItemWidget> {
-  bool _isDone = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _isDone = widget.isDone;
-  }
-
-  void checkboxChanged(bool? value) {
+  void changeDone(value) {
     setState(() {
-      _isDone = value ?? false;
+      widget.todo.done = value;
     });
+    widget.refresh();
   }
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: Checkbox(
-        value: _isDone,
-        onChanged: checkboxChanged,
+        value: widget.todo.done,
+        onChanged: changeDone,
       ),
       onTap: () {
-        setState(
-          () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const DetailPage(),
-              ),
-            );
+        Navigator.pushNamed(
+          context,
+          DetailPage.routeName,
+          arguments: {
+            'todo': widget.todo,
+            'onDelete': widget.onDelete,
           },
-        );
+        ).then((value) => setState(() {}));
       },
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -58,22 +50,23 @@ class _ToDoItemWidgetState extends State<ToDoItemWidget> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              Navigator.push(
+              Navigator.pushNamed(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const EditPage(),
-                ),
-              );
+                EditPage.routeName,
+                arguments: {
+                  'todo': widget.todo,
+                },
+              ).then((_) => setState(() {}));
             },
           ),
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () {},
+            onPressed: () => widget.onDelete(widget.todo),
           ),
         ],
       ),
-      title: Text(widget.title),
-      subtitle: Text(widget.description),
+      title: Text(widget.todo.title),
+      subtitle: Text(widget.todo.description),
     );
   }
 }
